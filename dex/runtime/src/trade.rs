@@ -415,14 +415,15 @@ mod tests {
 
     fn output(key:<Test as system::Trait>::Hash){
         let mut item = <SellOrders<Test>>::reade_head(key);
+        print!("-----------From head...\n");
         loop {
-            print!("{:?},{:?},{:?},{},", item.prev, item.next, item.price, item.orders.len());
+            print!("{:?},{:?},{:?},{},\n", item.prev, item.next, item.price, item.orders.len());
             let mut orders_iter = item.orders.iter();
             loop {
                 match orders_iter.next(){
                     Some(order_hash) => {
                         let order = <Orders<Test>>::get(order_hash).unwrap();
-                        print!("({}: {}{}),", order.hash, order.amount, order.remained_amount);
+                        print!("({}: {}\t{}),\n", order.hash, order.amount, order.remained_amount);
                     },
                     None => {
                         break;
@@ -463,7 +464,8 @@ mod tests {
             let tp = TradeModule::trade_pair_by_hash(tp_hash).unwrap();
 
             assert_ok!(TradeModule::create_limit_order(Origin::signed(Bob), base, quote, OrderType::Sell, 18, 100));
-
+            print!("after create sell (100@18)\n");
+            output(tp_hash);
             let order_hash = TradeModule::owned_order((Bob,0)).unwrap();
             let order1 = TradeModule::order(order_hash).unwrap();
             assert_eq!(order1.amount, 100);
@@ -471,9 +473,11 @@ mod tests {
 
 
             assert_ok!(TradeModule::create_limit_order(Origin::signed(Bob), base, quote, OrderType::Sell, 10, 50));
+            print!("after create sell (50@10)\n");
+            output(tp_hash);
             let order_hash = TradeModule::owned_order((Bob,1)).unwrap();
             let mut order2 = TradeModule::order(order_hash).unwrap();
-            <Orders<Test>>::insert(order2.hash,order2.clone());
+            
             assert_eq!(order2.amount, 50);
 
             assert_ok!(TradeModule::create_limit_order(Origin::signed(Bob), base, quote, OrderType::Sell, 5, 10));
@@ -483,11 +487,14 @@ mod tests {
             assert_ok!(TradeModule::create_limit_order(Origin::signed(Bob), base, quote, OrderType::Sell, 12, 20));
             let order_hash = TradeModule::owned_order((Bob,2)).unwrap();
             let mut order3 = TradeModule::order(order_hash).unwrap();
-            <Orders<Test>>::insert(order3.hash,order3.clone());
-            
+            print!("after create sell (10@5)\n");
+            print!("after create sell (20@5)\n");
+            print!("after create sell (10@12)\n");
+            print!("after create sell (30@12)\n");
+            print!("after create sell (20@12)\n");
+            output(tp_hash);
             let order_hash = TradeModule::owned_order((Bob,3)).unwrap();
             let mut order4 = TradeModule::order(order_hash).unwrap();
-            <Orders<Test>>::insert(order4.hash,order4.clone());
             let order_hash = TradeModule::owned_order((Bob,4)).unwrap();
             let order5 = TradeModule::order(order_hash).unwrap();
             let order_hash = TradeModule::owned_order((Bob,5)).unwrap();
@@ -498,16 +505,22 @@ mod tests {
             assert_eq!(order7.amount, 20);
 
 
-            output(tp_hash);
             order3.remained_amount = Zero::zero();
             order3.status = OrderStatus::Filled;
+            <Orders<Test>>::insert(order3.hash,order3.clone());
+
             order4.status = OrderStatus::Canceled;
+            <Orders<Test>>::insert(order4.hash,order4.clone());
+
             order2.remained_amount = Zero::zero();
             order2.status = OrderStatus::Filled;
-            
+            <Orders<Test>>::insert(order2.hash,order2.clone());
 
             <SellOrders<Test>>::remove_value(tp_hash, 5);
+            print!("after remove price 5");
+            output(tp_hash);
             <SellOrders<Test>>::remove_value(tp_hash, 10);
+            print!("after remove price 10");
             output(tp_hash);
 
 		});
