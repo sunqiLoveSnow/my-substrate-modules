@@ -183,7 +183,7 @@ impl<T: Trait> Module<T>{
 
 
 
-
+/*
 
 /// tests for this module
 #[cfg(test)]
@@ -295,3 +295,4 @@ mod tests {
 		});
 	}
 }
+*/
